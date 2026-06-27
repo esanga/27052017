@@ -10,11 +10,16 @@ Como obter a x-api-key:
   2. Abra DevTools → Network → filtre por "search"
   3. Copie o valor do header "x-api-key" de qualquer requisição
   4. Cole no campo API_KEY abaixo ou exporte: export SMILES_API_KEY=...
+
+Canais de notificação (configure via variáveis de ambiente):
+  Telegram  → TELEGRAM_TOKEN + TELEGRAM_CHAT_ID
+  WhatsApp  → CALLMEBOT_PHONE + CALLMEBOT_APIKEY
+  E-mail    → EMAIL_DE + EMAIL_PARA + EMAIL_SENHA
 """
 
 import os
 import time
-import json
+import urllib.parse
 import smtplib
 import itertools
 import argparse
@@ -46,6 +51,20 @@ INTERVALO_SEGUNDOS = 3600     # 1 hora
 # API
 API_KEY = os.getenv("SMILES_API_KEY", "")  # prefira variável de ambiente
 BASE_URL = "https://api-air-flightsearch-prd.smiles.com.br/v1/airlines/search"
+
+# Notificação Telegram (opcional)
+#   1. Fale com @BotFather no Telegram → /newbot → copie o token
+#   2. Envie qualquer mensagem para o bot e acesse:
+#      https://api.telegram.org/bot<TOKEN>/getUpdates  → copie o chat_id
+TELEGRAM_TOKEN   = os.getenv("TELEGRAM_TOKEN", "")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
+
+# Notificação WhatsApp via CallMeBot (opcional)
+#   1. Adicione +34 644 59 78 46 aos contatos
+#   2. Envie: "I allow callmebot to send me messages"
+#   3. Você receberá a apikey por WhatsApp
+CALLMEBOT_PHONE  = os.getenv("CALLMEBOT_PHONE", "")   # formato: 5511999999999
+CALLMEBOT_APIKEY = os.getenv("CALLMEBOT_APIKEY", "")
 
 # Notificação por e-mail (opcional — deixe em branco para desativar)
 EMAIL_DE      = os.getenv("EMAIL_DE", "")
@@ -134,6 +153,34 @@ def formatar_voo(voo: dict, origem: str, destino: str, data: str) -> str:
     )
 
 
+def notificar_telegram(texto: str):
+    if not all([TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]):
+        return
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    try:
+        resp = requests.post(url, json={"chat_id": TELEGRAM_CHAT_ID, "text": texto}, timeout=15)
+        resp.raise_for_status()
+        print("  [✓] Telegram enviado")
+    except Exception as e:
+        print(f"  [!] Falha no Telegram: {e}")
+
+
+def notificar_whatsapp(texto: str):
+    if not all([CALLMEBOT_PHONE, CALLMEBOT_APIKEY]):
+        return
+    encoded = urllib.parse.quote(texto)
+    url = (
+        f"https://api.callmebot.com/whatsapp.php"
+        f"?phone={CALLMEBOT_PHONE}&text={encoded}&apikey={CALLMEBOT_APIKEY}"
+    )
+    try:
+        resp = requests.get(url, timeout=15)
+        resp.raise_for_status()
+        print("  [✓] WhatsApp enviado")
+    except Exception as e:
+        print(f"  [!] Falha no WhatsApp: {e}")
+
+
 def enviar_email(assunto: str, corpo: str):
     if not all([EMAIL_DE, EMAIL_PARA, EMAIL_SENHA]):
         return
@@ -150,6 +197,12 @@ def enviar_email(assunto: str, corpo: str):
         print("  [✓] E-mail enviado")
     except Exception as e:
         print(f"  [!] Falha ao enviar e-mail: {e}")
+
+
+def notificar(assunto: str, corpo: str):
+    notificar_telegram(f"{assunto}\n\n{corpo}")
+    notificar_whatsapp(f"{assunto}\n\n{corpo}")
+    enviar_email(assunto, corpo)
 
 
 # ── Loop principal ───────────────────────────────────────────────────────────
@@ -196,7 +249,7 @@ def main():
         if encontrados:
             corpo = "\n".join(encontrados)
             print(f"\n[!] {len(encontrados)} award(s) encontrado(s)!")
-            enviar_email(
+            notificar(
                 f"[Smiles] {len(encontrados)} award biz GRU→Europa ≤{MAX_MILHAS//1000}k mi",
                 f"Awards encontrados em {agora}:\n\n{corpo}"
             )

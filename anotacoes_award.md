@@ -33,17 +33,40 @@ pip install requests
 # Define a chave da API (obtida no DevTools do smiles.com.br)
 export SMILES_API_KEY=sua_chave_aqui
 
-# Alerta por e-mail (opcional — use senha de app do Gmail)
+# ── Canal Telegram (recomendado) ──────────────────────────────────────────
+export TELEGRAM_TOKEN=seu_token_do_botfather
+export TELEGRAM_CHAT_ID=seu_chat_id
+
+# ── Canal WhatsApp via CallMeBot ──────────────────────────────────────────
+export CALLMEBOT_PHONE=5511999999999   # DDI + DDD + número, sem +
+export CALLMEBOT_APIKEY=sua_apikey_callmebot
+
+# ── Canal e-mail (opcional) ───────────────────────────────────────────────
 export EMAIL_DE=seu@gmail.com
 export EMAIL_PARA=destino@email.com
-export EMAIL_SENHA=senha_de_app
+export EMAIL_SENHA=senha_de_app       # senha de app do Gmail
 
-# Roda em loop (1x/hora)
+# Roda em loop (1x/hora) — dispara em todos os canais configurados
 python3 monitorar_smiles.py
 
 # Ou apenas uma verificação
 python3 monitorar_smiles.py --once
 ```
+
+### Como configurar o Telegram
+
+1. Fale com **@BotFather** no Telegram → `/newbot` → siga as instruções
+2. Copie o **token** (formato `123456:ABC-...`)
+3. Envie qualquer mensagem para o seu bot
+4. Acesse `https://api.telegram.org/bot<TOKEN>/getUpdates` no navegador
+5. Copie o valor de `result[0].message.chat.id` → esse é o `TELEGRAM_CHAT_ID`
+
+### Como configurar o WhatsApp (CallMeBot)
+
+1. Salve o número **+34 644 59 78 46** nos seus contatos
+2. Envie a mensagem: `I allow callmebot to send me messages`
+3. Em alguns segundos você receberá a `apikey` por WhatsApp
+4. Use o seu número no formato internacional sem `+` (ex: `5511999887766`)
 
 ### Como obter a x-api-key do Smiles
 
@@ -55,12 +78,23 @@ python3 monitorar_smiles.py --once
 
 ### Ajustes no script
 
-| Variável              | Arquivo              | Descrição                          |
-|-----------------------|----------------------|------------------------------------|
-| `MAX_MILHAS`          | `monitorar_smiles.py`| Teto de milhas por trecho          |
-| `DIAS_A_PARTIR_DE`    | `monitorar_smiles.py`| Início da janela de datas          |
-| `JANELA_DIAS`         | `monitorar_smiles.py`| Quantos dias à frente verificar    |
-| `INTERVALO_SEGUNDOS`  | `monitorar_smiles.py`| Frequência do loop (padrão: 1h)    |
+| Variável de ambiente  | Descrição                                        |
+|-----------------------|--------------------------------------------------|
+| `SMILES_API_KEY`      | Chave da API do Smiles (DevTools → Network)      |
+| `TELEGRAM_TOKEN`      | Token do bot (@BotFather)                        |
+| `TELEGRAM_CHAT_ID`    | ID do chat Telegram                              |
+| `CALLMEBOT_PHONE`     | Número WhatsApp com DDI (sem `+`)                |
+| `CALLMEBOT_APIKEY`    | Chave CallMeBot recebida por WhatsApp            |
+| `EMAIL_DE`            | Remetente Gmail                                  |
+| `EMAIL_PARA`          | Destinatário e-mail                              |
+| `EMAIL_SENHA`         | Senha de app do Gmail                            |
+
+| Variável no script    | Descrição                                        |
+|-----------------------|--------------------------------------------------|
+| `MAX_MILHAS`          | Teto de milhas por trecho                        |
+| `DIAS_A_PARTIR_DE`    | Início da janela de datas (dias a partir de hoje)|
+| `JANELA_DIAS`         | Quantos dias à frente verificar                  |
+| `INTERVALO_SEGUNDOS`  | Frequência do loop (padrão: 1h)                  |
 
 ---
 
