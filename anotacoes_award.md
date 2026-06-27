@@ -30,28 +30,18 @@
 # Instala dependências
 pip install requests
 
-# Define a chave da API (obtida no DevTools do smiles.com.br)
-export SMILES_API_KEY=sua_chave_aqui
+# Cria o arquivo de configuração a partir do template
+cp .env.example .env
+# Edite .env e preencha os valores desejados
 
-# ── Canal Telegram (recomendado) ──────────────────────────────────────────
-export TELEGRAM_TOKEN=seu_token_do_botfather
-export TELEGRAM_CHAT_ID=seu_chat_id
-
-# ── Canal WhatsApp via CallMeBot ──────────────────────────────────────────
-export CALLMEBOT_PHONE=5511999999999   # DDI + DDD + número, sem +
-export CALLMEBOT_APIKEY=sua_apikey_callmebot
-
-# ── Canal e-mail (opcional) ───────────────────────────────────────────────
-export EMAIL_DE=seu@gmail.com
-export EMAIL_PARA=destino@email.com
-export EMAIL_SENHA=senha_de_app       # senha de app do Gmail
-
-# Roda em loop (1x/hora) — dispara em todos os canais configurados
+# Roda em loop (1x/hora) — dispara em todos os canais configurados no .env
 python3 monitorar_smiles.py
 
 # Ou apenas uma verificação
 python3 monitorar_smiles.py --once
 ```
+
+> O arquivo `.env` é carregado automaticamente pelo script e está no `.gitignore` — suas chaves nunca vão para o repositório.
 
 ### Como configurar o Telegram
 
